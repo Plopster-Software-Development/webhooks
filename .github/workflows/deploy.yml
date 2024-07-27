@@ -18,14 +18,14 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "PORT=${{ secrets.WK_WP_PORT }}" >> .env
-          echo "MONGODB_URI=${{ secrets.WK_WP_MONGODB_URI }}" >> .env
-          echo "DATABASE_URL=${{ secrets.WK_WP_DATABASE_URL }}" >> .env
-          echo "S3_ACCESS_KEY=${{ secrets.WK_WP_S3_ACCESS_KEY }}" >> .env
-          echo "S3_SECRET_ACCESS_KEY=${{ secrets.WK_WP_S3_SECRET_ACCESS_KEY }}" >> .env
-          echo "S3_REGION=${{ secrets.WK_WP_S3_REGION }}" >> .env
-          echo "S3_BUCKET_NAME=${{ secrets.WK_WP_S3_BUCKET_NAME }}" >> .env
-          echo "APP_KEY=${{ secrets.WK_WP_APP_KEY }}" >> .env
+          echo "PORT=${{ secrets.WK_WP_PORT }}" >> apps/whatsapp/.env
+          echo "MONGODB_URI=${{ secrets.WK_WP_MONGODB_URI }}" >> apps/whatsapp/.env
+          echo "DATABASE_URL=${{ secrets.WK_WP_DATABASE_URL }}" >> apps/whatsapp/.env
+          echo "S3_ACCESS_KEY=${{ secrets.WK_WP_S3_ACCESS_KEY }}" >> apps/whatsapp/.env
+          echo "S3_SECRET_ACCESS_KEY=${{ secrets.WK_WP_S3_SECRET_ACCESS_KEY }}" >> apps/whatsapp/.env
+          echo "S3_REGION=${{ secrets.WK_WP_S3_REGION }}" >> apps/whatsapp/.env
+          echo "S3_BUCKET_NAME=${{ secrets.WK_WP_S3_BUCKET_NAME }}" >> apps/whatsapp/.env
+          echo "APP_KEY=${{ secrets.WK_WP_APP_KEY }}" >> apps/whatsapp/.env
 
       - name: Validate Files
         run: ls -la
@@ -62,4 +62,4 @@ jobs:
             fi
 
       - name: Prune System
-        run: 'echo y | docker system prune -a'
+        run: 'echo y | docker system prune -a | docker image prune -a -f'
