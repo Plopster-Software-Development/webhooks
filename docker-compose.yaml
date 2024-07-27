@@ -1,0 +1,13 @@
+services:
+  whatsapp:
+    build:
+      context: .
+      dockerfile: ./apps/whatsapp/Dockerfile
+      target: development
+    command: yarn run start:dev webhook
+    env_file:
+      - ./apps/whatsapp/.env
+    ports:
+      - '8003:3000'
+    volumes:
+      - .:/usr/src/app
