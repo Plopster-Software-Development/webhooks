@@ -29,6 +29,7 @@ export class WhatsappService {
   private twilioClient: any;
   private client: S3Client;
   private gCloudProjectId: any;
+  private twilioPhoneNumber: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -50,6 +51,7 @@ export class WhatsappService {
 
   public async processMessage(webhookDto?: TwilioMessageDto) {
     try {
+      console.log(JSON.stringify(webhookDto));
       this.initializeKeys(webhookDto.To);
 
       const userId = await this.findOrCreateUser(
@@ -91,6 +93,7 @@ export class WhatsappService {
   }
 
   private async initializeKeys(twilioPhoneNumber: string) {
+    this.twilioPhoneNumber = twilioPhoneNumber;
     const botCredentials = await this.fetchBotCredentials(
       replaceParamsFromString(twilioPhoneNumber, 'whatsapp:', ''),
     );
@@ -259,7 +262,7 @@ export class WhatsappService {
     try {
       const messageRequest = {
         body: botMessage,
-        from: `whatsapp:${this.configService.get<string>('TWILIO_PHONE_NUMBER')}`,
+        from: this.twilioPhoneNumber,
         to: `${customerPhoneNo}`,
       };
 
