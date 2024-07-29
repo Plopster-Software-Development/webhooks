@@ -6,14 +6,14 @@ COPY package.json ./
 COPY yarn.lock ./
 COPY tsconfig.json tsconfig.json
 COPY nest-cli.json nest-cli.json
-COPY .env .env
 
 RUN yarn install
 
 COPY apps/whatsapp apps/whatsapp
 COPY libs libs
 
-RUN cd apps/whatsapp && yarn install
+COPY apps/whatsapp/prisma ./prisma
+RUN npx prisma generate
 
 RUN yarn run build webhook
 
@@ -26,6 +26,9 @@ WORKDIR /usr/src/app
 
 COPY package.json ./
 COPY yarn.lock ./
+
+COPY apps/whatsapp/prisma ./prisma
+RUN npx prisma generate
 
 RUN yarn install --prod
 

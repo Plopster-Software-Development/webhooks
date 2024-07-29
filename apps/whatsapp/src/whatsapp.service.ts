@@ -23,6 +23,19 @@ interface BotCredentials {
   gCredsCloud: string;
 }
 
+interface JWTInput {
+  type?: string;
+  client_email?: string;
+  private_key?: string;
+  private_key_id?: string;
+  project_id?: string;
+  client_id?: string;
+  client_secret?: string;
+  refresh_token?: string;
+  quota_project_id?: string;
+  universe_domain?: string;
+}
+
 @Injectable()
 export class WhatsappService {
   private dialogflowClient: SessionsClient;
@@ -51,8 +64,7 @@ export class WhatsappService {
 
   public async processMessage(webhookDto?: TwilioMessageDto) {
     try {
-      console.log(JSON.stringify(webhookDto));
-      this.initializeKeys(webhookDto.To);
+      await this.initializeKeys(webhookDto.To);
 
       const userId = await this.findOrCreateUser(
         webhookDto.ProfileName,
@@ -93,23 +105,33 @@ export class WhatsappService {
   }
 
   private async initializeKeys(twilioPhoneNumber: string) {
-    this.twilioPhoneNumber = twilioPhoneNumber;
-    const botCredentials = await this.fetchBotCredentials(
-      replaceParamsFromString(twilioPhoneNumber, 'whatsapp:', ''),
-    );
+    try {
+      this.twilioPhoneNumber = twilioPhoneNumber;
+      const botCredentials = await this.fetchBotCredentials(
+        replaceParamsFromString(twilioPhoneNumber, 'whatsapp:', ''),
+      );
 
-    const key = `google-cloud-credentials/${botCredentials.id}.json`;
+      const key = `google-cloud-credentials/${botCredentials.id}.json`;
 
-    const gCloudCreds = await getFileContent(this.client, key);
+      const credentials: JWTInput = await getFileContent(
+        'gcloudcredsbot',
+        key,
+        this.client,
+      );
 
-    this.dialogflowClient = new dialogflow.SessionsClient({
-      credentials: gCloudCreds,
-    });
+      this.dialogflowClient = new dialogflow.SessionsClient({
+        credentials: credentials,
+      });
 
-    this.twilioClient = new Twilio(
-      this.cryptService.decrypt(botCredentials.twilioSID, false),
-      this.cryptService.decrypt(botCredentials.twilioTK, false),
-    );
+      this.gCloudProjectId = credentials.project_id;
+
+      this.twilioClient = new Twilio(
+        this.cryptService.decrypt(botCredentials.twilioSID, false),
+        this.cryptService.decrypt(botCredentials.twilioTK, false),
+      );
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   private async findOrCreateUser(
@@ -201,11 +223,9 @@ export class WhatsappService {
   ) {
     try {
       const sessionPath = this.dialogflowClient.projectAgentSessionPath(
-        await this.dialogflowClient.getProjectId(),
+        this.gCloudProjectId,
         sessionId,
       );
-
-      console.log(await this.dialogflowClient.getProjectId());
 
       const request = {
         session: sessionPath,

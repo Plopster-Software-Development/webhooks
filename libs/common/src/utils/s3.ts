@@ -1,23 +1,14 @@
-import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 
-// interface JWTInput {
-//   type?: string;
-//   client_email?: string;
-//   private_key?: string;
-//   private_key_id?: string;
-//   project_id?: string;
-//   client_id?: string;
-//   client_secret?: string;
-//   refresh_token?: string;
-//   quota_project_id?: string;
-//   universe_domain?: string;
-// }
-
-export const getFileContent = async (client, key: string): Promise<any> => {
+export const getFileContent = async (
+  bucket: string,
+  key: string,
+  client: S3Client,
+): Promise<any> => {
   try {
     const command = new GetObjectCommand({
-      Bucket: 'gcloudcredsbot',
+      Bucket: bucket,
       Key: key,
     });
 

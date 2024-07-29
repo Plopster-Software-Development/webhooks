@@ -30,6 +30,9 @@ jobs:
       - name: Validate Files
         run: ls -la
 
+      - name: Validate wpp files
+        run: ls -la apps/whatsapp
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 

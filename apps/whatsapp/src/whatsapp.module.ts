@@ -20,12 +20,10 @@ import { WhatsappService } from './whatsapp.service';
 import { PrismaService } from './prisma/prisma.service';
 import { CryptModule } from '@app/common/crypt/crypt.module';
 
-//npx prisma generate
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'apps/whatsapp/.env',
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
         MONGODB_URI: Joi.string().required(),
