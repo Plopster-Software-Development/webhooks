@@ -10,8 +10,8 @@ COPY apps/whatsapp apps/whatsapp
 COPY libs libs
 COPY apps/whatsapp/prisma ./prisma
 
-RUN npx prisma generate
-RUN yarn run build webhook
+RUN npx prisma generate --no-engine
+RUN yarn run build whatsapp
 
 FROM node:alpine AS production
 
@@ -24,7 +24,7 @@ COPY package.json yarn.lock ./
 COPY apps/whatsapp/.env .env
 COPY apps/whatsapp/prisma ./prisma
 
-RUN npx prisma generate
+RUN npx prisma generate --no-engine
 RUN yarn install --frozen-lockfile --production
 
 COPY --from=development /usr/src/app/dist ./dist
