@@ -14,16 +14,15 @@ import {
   ConversationDocument,
   ConversationSchema,
 } from './models/conversation.schema';
-import { PrismaClient } from '@prisma/client';
 import { WhatsappController } from './whatsapp.controller';
 import { WhatsappService } from './whatsapp.service';
-import { PrismaService } from './prisma/prisma.service';
 import { CryptModule } from '@app/common/crypt/crypt.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: 'apps/whatsapp/.env',
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
         MONGODB_URI: Joi.string().required(),
@@ -53,8 +52,6 @@ import { CryptModule } from '@app/common/crypt/crypt.module';
     ClientsRepository,
     ConversationsRepository,
     Logger,
-    PrismaService,
-    PrismaClient,
   ],
   exports: [ClientsRepository, ConversationsRepository],
 })

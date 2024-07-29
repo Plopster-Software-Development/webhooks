@@ -10,7 +10,8 @@ import { Types } from 'mongoose';
 import { ConversationDocument } from './models/conversation.schema';
 import { TwilioMessageDto } from './dto/twilio-message.dto';
 import { Twilio } from 'twilio';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client/edge';
+import { withAccelerate } from '@prisma/extension-accelerate';
 import { S3Client } from '@aws-sdk/client-s3';
 import { ConversationsRepository } from './repository/conversations.repository';
 import { CryptService } from '@app/common/crypt/crypt.service';
@@ -43,15 +44,16 @@ export class WhatsappService {
   private client: S3Client;
   private gCloudProjectId: any;
   private twilioPhoneNumber: string;
+  private prisma: any;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly conversationRepository: ConversationsRepository,
     private readonly clientsRepository: ClientsRepository,
     private readonly logger: Logger,
-    private readonly prisma: PrismaClient,
     private readonly cryptService: CryptService,
   ) {
+    this.prisma = new PrismaClient().$extends(withAccelerate());
     this.client = new S3Client({
       region: this.configService.get('S3_REGION'),
       credentials: {
@@ -352,6 +354,7 @@ export class WhatsappService {
           twilioTK: true,
           gCredsCloud: true,
         },
+        cacheStrategy: { ttl: 60 },
       });
     } catch (error) {
       throw error;
