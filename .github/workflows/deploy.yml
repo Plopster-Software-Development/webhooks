@@ -63,4 +63,6 @@ jobs:
             fi
 
       - name: Prune System
-        run: 'echo y | docker system prune -a | docker image prune -a -f'
+        run: |
+          docker system prune -a
+          docker image prune -a -f
