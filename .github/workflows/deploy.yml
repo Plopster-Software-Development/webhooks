@@ -53,7 +53,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/whatsapp-webhook:latest
             docker stop webhook-whatsapp-container
             docker rm webhook-whatsapp-container
-            docker run -d --name webhook-whatsapp-container --network host -p ${{ secrets.CT_WK_WP_PORT }}:${{ secrets.WK_WP_PORT }} ${{ secrets.DOCKER_USERNAME }}/whatsapp-webhook:latest
+            docker run -d --name webhook-whatsapp-container -p ${{ secrets.CT_WK_WP_PORT }}:${{ secrets.WK_WP_PORT }} ${{ secrets.DOCKER_USERNAME }}/whatsapp-webhook:latest
 
             if docker ps | grep webhook-whatsapp-container; then
               echo "Container is running successfully"
