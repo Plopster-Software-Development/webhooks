@@ -64,5 +64,5 @@ jobs:
 
       - name: Prune System
         run: |
-          docker system prune -a
+          docker system prune -af
           docker image prune -a -f
