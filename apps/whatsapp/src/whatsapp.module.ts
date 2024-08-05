@@ -22,7 +22,6 @@ import { CryptModule } from '@app/common/crypt/crypt.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'apps/whatsapp/.env',
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
         MONGODB_URI: Joi.string().required(),
