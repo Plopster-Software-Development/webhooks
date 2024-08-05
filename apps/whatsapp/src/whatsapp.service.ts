@@ -6,7 +6,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { ClientsRepository } from './repository/clients.repository';
 import dialogflow, { SessionsClient } from '@google-cloud/dialogflow';
-import { Types } from 'mongoose';
 import { ConversationDocument } from './models/conversation.schema';
 import { TwilioMessageDto } from './dto/twilio-message.dto';
 import { Twilio } from 'twilio';
@@ -16,9 +15,11 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { ConversationsRepository } from './repository/conversations.repository';
 import { CryptService } from '@app/common/crypt/crypt.service';
 import { getFileContent, replaceParamsFromString } from '@app/common/utils/s3';
+import * as uuid from 'uuid';
 
 interface BotCredentials {
   id: string;
+  bot_id: string;
   twilioSID: string;
   twilioTK: string;
   gCredsCloud: string;
@@ -66,14 +67,16 @@ export class WhatsappService {
 
   public async processMessage(webhookDto?: TwilioMessageDto) {
     try {
-      await this.initializeKeys(webhookDto.To);
+      const botId = await this.initializeKeys(webhookDto.To);
 
       const userId = await this.findOrCreateUser(
+        botId,
         webhookDto.ProfileName,
         replaceParamsFromString(webhookDto.From, 'whatsapp', ''),
       );
 
       const conversationId = await this.findOrCreateConversation(
+        botId,
         userId,
         webhookDto.Body,
       );
@@ -106,7 +109,7 @@ export class WhatsappService {
     }
   }
 
-  private async initializeKeys(twilioPhoneNumber: string) {
+  private async initializeKeys(twilioPhoneNumber: string): Promise<string> {
     try {
       this.twilioPhoneNumber = twilioPhoneNumber;
       const botCredentials = await this.fetchBotCredentials(
@@ -131,51 +134,55 @@ export class WhatsappService {
         this.cryptService.decrypt(botCredentials.twilioSID, false),
         this.cryptService.decrypt(botCredentials.twilioTK, false),
       );
+
+      return botCredentials.bot_id;
     } catch (error) {
       console.log(error);
     }
   }
 
   private async findOrCreateUser(
+    botId: string,
     customerAlias: string,
     customerPhoneNo: string,
-  ): Promise<Types.ObjectId> {
+  ): Promise<string> {
     try {
       let user = await this.clientsRepository.findOne({
         phone: customerPhoneNo,
+        botId: botId,
       });
 
       if (!user) {
         user = await this.clientsRepository.create({
+          botId: botId,
           alias: customerAlias,
-          fullName: null,
-          email: null,
           phone: customerPhoneNo,
-          billingAddress: null,
-          gender: null,
-          dniType: null,
-          dni: null,
           registerDate: new Date(),
         });
       }
 
       return user._id;
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException('Failed to find or create user');
     }
   }
 
   private async findOrCreateConversation(
-    userId: Types.ObjectId,
+    botId: string,
+    userId: string,
     conversationMessage?: string,
-  ): Promise<{ found: boolean; _id: Types.ObjectId }> {
+  ): Promise<{ found: boolean; _id: string }> {
     try {
       const conversation = await this.conversationRepository.findOne({
+        botId: botId,
         clientId: userId,
+        endDate: { $exists: false },
       });
 
       if (!conversation || this.isConversationExpired(conversation)) {
         const conversationId = await this.createConversation(
+          botId,
           userId,
           conversationMessage,
         );
@@ -195,24 +202,25 @@ export class WhatsappService {
   }
 
   private async createConversation(
-    userId: Types.ObjectId,
+    botId: string,
+    userId: string,
     message: string,
-  ): Promise<Types.ObjectId> {
+  ): Promise<string> {
     try {
       const newConversation = await this.conversationRepository.create({
+        botId: botId,
         clientId: userId,
         startDate: new Date(),
-        endDate: null,
         message: [
           {
-            messageId: new Types.ObjectId(),
+            messageId: uuid.v4(),
             timestamp: new Date(),
             author: 'user',
             content: message,
-            messageStatus: '',
           },
         ],
       });
+
       return newConversation._id;
     } catch (error) {
       throw new InternalServerErrorException('Failed to create conversation');
@@ -252,17 +260,17 @@ export class WhatsappService {
   }
 
   private async updateConversation(
-    conversationId: Types.ObjectId,
+    conversationId: string,
     message: string | null,
     author: string,
   ) {
     try {
-      await this.conversationRepository.findOneAndUpdate(
+      return await this.conversationRepository.findOneAndUpdate(
         { _id: conversationId },
         {
           $push: {
             message: {
-              messageId: new Types.ObjectId(),
+              messageId: uuid.v4(),
               timestamp: new Date(),
               author: author,
               content: message,
@@ -272,6 +280,7 @@ export class WhatsappService {
       );
     } catch (error) {
       throw new InternalServerErrorException(
+        error,
         'Failed to update conversation with bot message',
       );
     }
@@ -305,10 +314,10 @@ export class WhatsappService {
     return timeDifference <= MILLISECONDS_IN_A_DAY;
   }
 
-  private async expireConversation(conversationId: Types.ObjectId) {
+  private async expireConversation(conversation: ConversationDocument) {
     try {
       await this.conversationRepository.findOneAndUpdate(
-        { _id: conversationId },
+        { _id: conversation._id },
         { endDate: Date.now() },
       );
     } catch (error) {
@@ -317,12 +326,6 @@ export class WhatsappService {
   }
 
   private isConversationExpired(conversation: ConversationDocument): boolean {
-    //todo: puede existir mas de una conversacion 1 viva muchas muertas
-
-    if (conversation.endDate) {
-      return true;
-    }
-
     const userMessages = conversation.message.filter(
       (message) => message.author === 'user',
     );
@@ -333,7 +336,7 @@ export class WhatsappService {
     );
 
     if (!isConversationAlive) {
-      this.expireConversation(conversation._id);
+      this.expireConversation(conversation);
       return true;
     }
 
@@ -350,6 +353,7 @@ export class WhatsappService {
         },
         select: {
           id: true,
+          bot_id: true,
           twilioSID: true,
           twilioTK: true,
           gCredsCloud: true,

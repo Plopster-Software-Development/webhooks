@@ -1,6 +1,7 @@
-import { FilterQuery, Model, Types, UpdateQuery } from 'mongoose';
+import { FilterQuery, Model, UpdateQuery } from 'mongoose';
 import { AbstractDocument } from './abstract.schema';
 import { Logger } from '@nestjs/common';
+import * as uuid from 'uuid';
 
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   protected abstract readonly logger: Logger;
@@ -10,7 +11,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   async create(document: Omit<TDocument, '_id'>): Promise<TDocument> {
     const createdDocument = new this.model({
       ...document,
-      _id: new Types.ObjectId(),
+      _id: uuid.v4(),
     });
 
     return (await createdDocument.save()).toJSON() as unknown as TDocument;
