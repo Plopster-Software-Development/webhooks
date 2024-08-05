@@ -91,7 +91,7 @@ export class WhatsappService {
 
       const dialogFlowResponse = await this.processDialogFlowMessage(
         webhookDto.Body,
-        conversationId._id.toString(),
+        conversationId._id,
       );
 
       await this.updateConversation(
