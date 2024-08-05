@@ -3,7 +3,7 @@ FROM node:alpine AS development
 WORKDIR /usr/src/app
 
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN yarn install
 
 COPY tsconfig.json nest-cli.json ./
 COPY apps/whatsapp apps/whatsapp
@@ -25,7 +25,7 @@ COPY apps/whatsapp/.env .env
 COPY apps/whatsapp/prisma ./prisma
 
 RUN npx prisma generate --no-engine
-RUN yarn install --frozen-lockfile --production
+RUN yarn install --production
 
 COPY --from=development /usr/src/app/dist ./dist
 
