@@ -118,6 +118,13 @@ export class WhatsappService {
         replaceParamsFromString(twilioPhoneNumber, 'whatsapp:', ''),
       );
 
+      console.log(
+        botCredentials.id,
+        botCredentials.bot_id,
+        botCredentials.twilioSID,
+        botCredentials.twilioTK,
+      );
+
       const key = `google-cloud-credentials/${botCredentials.id}.json`;
 
       const credentials: JWTInput = await getFileContent(
