@@ -130,13 +130,18 @@ export class WhatsappService {
         this.client,
       );
 
+      console.log(
+        'credentials ',
+        credentials,
+        'botCredentials ',
+        botCredentials,
+      );
+
       this.dialogflowClient = new dialogflow.SessionsClient({
         credentials: credentials,
       });
 
       this.gCloudProjectId = credentials.project_id;
-
-      console.log('initializeKeys ', this.gCloudProjectId);
 
       this.twilioClient = new Twilio(
         this.cryptService.decrypt(botCredentials.twilioSID, false),
