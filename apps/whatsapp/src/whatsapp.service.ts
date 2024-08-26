@@ -69,7 +69,6 @@ export class WhatsappService {
     try {
       const botId = await this.initializeKeys(webhookDto.To);
 
-      console.log('LLEGA? BOT ID:', botId);
       const buffer = await this.findOrCreateUser(
         botId,
         webhookDto.ProfileName,
