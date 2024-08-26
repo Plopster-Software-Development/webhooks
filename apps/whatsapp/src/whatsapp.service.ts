@@ -148,9 +148,18 @@ export class WhatsappService {
         this.cryptService.decrypt(botCredentials.twilioTK, false),
       );
 
+      console.log(
+        'gCloudProjectId ',
+        this.gCloudProjectId,
+        'twilioClient ',
+        this.twilioClient,
+        'Bot Id ',
+        botCredentials.bot_id,
+      );
+
       return botCredentials.bot_id;
     } catch (error) {
-      console.log(error);
+      console.log('initializeKeys', error);
     }
   }
 
@@ -178,7 +187,7 @@ export class WhatsappService {
 
       return user._id;
     } catch (error) {
-      console.log(error);
+      console.log('findOrCreateUser', error);
       throw new InternalServerErrorException('Failed to find or create user');
     }
   }
