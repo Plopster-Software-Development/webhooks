@@ -69,13 +69,14 @@ export class WhatsappService {
     try {
       const botId = await this.initializeKeys(webhookDto.To);
 
-      let userId = await this.findOrCreateUser(
+      console.log('BOT ID:', botId);
+      const buffer = await this.findOrCreateUser(
         botId,
         webhookDto.ProfileName,
         replaceParamsFromString(webhookDto.From, 'whatsapp', ''),
       );
 
-      userId = this.turnBufferIntoID(userId);
+      const userId = this.turnBufferIntoID(buffer);
 
       const conversationId = await this.findOrCreateConversation(
         botId,
@@ -114,15 +115,16 @@ export class WhatsappService {
   private async initializeKeys(twilioPhoneNumber: string): Promise<string> {
     try {
       this.twilioPhoneNumber = twilioPhoneNumber;
+
       const botCredentials = await this.fetchBotCredentials(
         replaceParamsFromString(twilioPhoneNumber, 'whatsapp:', ''),
       );
 
       console.log(
-        botCredentials.id,
-        botCredentials.bot_id,
-        botCredentials.twilioSID,
-        botCredentials.twilioTK,
+        'ID' + botCredentials.id,
+        'BOT ID' + botCredentials.bot_id,
+        'SID' + botCredentials.twilioSID,
+        'TK' + botCredentials.twilioTK,
       );
 
       const key = `google-cloud-credentials/${botCredentials.id}.json`;
@@ -151,11 +153,13 @@ export class WhatsappService {
   }
 
   private async findOrCreateUser(
-    botId: string,
+    botId: any,
     customerAlias: string,
     customerPhoneNo: string,
   ): Promise<any> {
     try {
+      console.log('BOT ID:', botId);
+
       let user = await this.clientsRepository.findOne({
         phone: customerPhoneNo,
         botId: botId,
