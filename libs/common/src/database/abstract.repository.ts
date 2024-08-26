@@ -10,7 +10,6 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
 
   async create(document: Omit<TDocument, '_id'>): Promise<TDocument> {
     const id = uuid.v4();
-    console.log('UUID =>', id);
 
     const createdDocument = new this.model({
       ...document,
@@ -30,6 +29,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
         `Document was not found with the filterQuery`,
         filterQuery,
       );
+
       return undefined;
     }
 

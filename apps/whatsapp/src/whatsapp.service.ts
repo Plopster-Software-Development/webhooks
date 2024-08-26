@@ -69,11 +69,13 @@ export class WhatsappService {
     try {
       const botId = await this.initializeKeys(webhookDto.To);
 
-      const userId = await this.findOrCreateUser(
+      let userId = await this.findOrCreateUser(
         botId,
         webhookDto.ProfileName,
         replaceParamsFromString(webhookDto.From, 'whatsapp', ''),
       );
+
+      userId = this.turnBufferIntoID(userId);
 
       const conversationId = await this.findOrCreateConversation(
         botId,
@@ -116,6 +118,7 @@ export class WhatsappService {
         replaceParamsFromString(twilioPhoneNumber, 'whatsapp:', ''),
       );
 
+      console.log('Bot Creds', botCredentials);
       const key = `google-cloud-credentials/${botCredentials.id}.json`;
 
       const credentials: JWTInput = await getFileContent(
@@ -145,7 +148,7 @@ export class WhatsappService {
     botId: string,
     customerAlias: string,
     customerPhoneNo: string,
-  ): Promise<string> {
+  ): Promise<any> {
     try {
       let user = await this.clientsRepository.findOne({
         phone: customerPhoneNo,
@@ -166,6 +169,18 @@ export class WhatsappService {
       console.log(error);
       throw new InternalServerErrorException('Failed to find or create user');
     }
+  }
+
+  private turnBufferIntoID(bufferObj: any) {
+    const buffer = Buffer.from(bufferObj.data);
+
+    return [
+      buffer.toString('hex', 0, 4),
+      buffer.toString('hex', 4, 6),
+      buffer.toString('hex', 6, 8),
+      buffer.toString('hex', 8, 10),
+      buffer.toString('hex', 10, 16),
+    ].join('-');
   }
 
   private async findOrCreateConversation(
@@ -195,6 +210,7 @@ export class WhatsappService {
         _id: conversation._id,
       };
     } catch (error) {
+      console.log(JSON.stringify(error), error.message);
       throw new InternalServerErrorException(
         'Failed to find or create conversation',
       );
@@ -317,7 +333,7 @@ export class WhatsappService {
   private async expireConversation(conversation: ConversationDocument) {
     try {
       await this.conversationRepository.findOneAndUpdate(
-        { _id: conversation._id },
+        { _id: conversation._id.toString() },
         { endDate: Date.now() },
       );
     } catch (error) {
@@ -363,7 +379,6 @@ export class WhatsappService {
     } catch (error) {
       throw error;
     } finally {
-      // En aplicaciones de producción, considera mover el manejo de la conexión de Prisma a otro lugar
       await this.prisma.$disconnect();
     }
   }
