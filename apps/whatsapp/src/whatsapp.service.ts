@@ -130,15 +130,19 @@ export class WhatsappService {
         this.client,
       );
 
-      console.log(
-        'credentials ',
-        credentials,
-        'botCredentials ',
-        botCredentials,
-      );
-
       this.dialogflowClient = new dialogflow.SessionsClient({
-        credentials: credentials,
+        credentials: {
+          type: credentials.type,
+          client_email: credentials.client_email,
+          private_key: credentials.private_key,
+          private_key_id: credentials.private_key_id,
+          project_id: credentials.project_id,
+          client_id: credentials.client_id,
+          client_secret: credentials.client_secret,
+          refresh_token: credentials.refresh_token,
+          quota_project_id: credentials.quota_project_id,
+          universe_domain: credentials.universe_domain,
+        },
       });
 
       this.gCloudProjectId = credentials.project_id;
@@ -146,15 +150,6 @@ export class WhatsappService {
       this.twilioClient = new Twilio(
         this.cryptService.decrypt(botCredentials.twilioSID, false),
         this.cryptService.decrypt(botCredentials.twilioTK, false),
-      );
-
-      console.log(
-        'gCloudProjectId ',
-        this.gCloudProjectId,
-        'twilioClient ',
-        this.twilioClient,
-        'Bot Id ',
-        botCredentials.bot_id,
       );
 
       return botCredentials.bot_id;
@@ -169,8 +164,6 @@ export class WhatsappService {
     customerPhoneNo: string,
   ): Promise<any> {
     try {
-      console.log('findOrCreateUser BOT ID:', botId);
-
       let user = await this.clientsRepository.findOne({
         phone: customerPhoneNo,
         botId: botId,
@@ -231,7 +224,7 @@ export class WhatsappService {
         _id: conversation._id,
       };
     } catch (error) {
-      console.log(JSON.stringify(error), error.message);
+      console.log('findOrCreateConversation ', error.message);
       throw new InternalServerErrorException(
         'Failed to find or create conversation',
       );
@@ -354,7 +347,7 @@ export class WhatsappService {
   private async expireConversation(conversation: ConversationDocument) {
     try {
       await this.conversationRepository.findOneAndUpdate(
-        { _id: conversation._id.toString() },
+        { _id: conversation._id },
         { endDate: Date.now() },
       );
     } catch (error) {
