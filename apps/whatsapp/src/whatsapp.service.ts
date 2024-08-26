@@ -69,7 +69,7 @@ export class WhatsappService {
     try {
       const botId = await this.initializeKeys(webhookDto.To);
 
-      console.log('BOT ID:', botId);
+      console.log('LLEGA? BOT ID:', botId);
       const buffer = await this.findOrCreateUser(
         botId,
         webhookDto.ProfileName,
@@ -120,12 +120,7 @@ export class WhatsappService {
         replaceParamsFromString(twilioPhoneNumber, 'whatsapp:', ''),
       );
 
-      console.log(
-        'ID' + botCredentials.id,
-        'BOT ID' + botCredentials.bot_id,
-        'SID' + botCredentials.twilioSID,
-        'TK' + botCredentials.twilioTK,
-      );
+      await this.prisma.$disconnect();
 
       const key = `google-cloud-credentials/${botCredentials.id}.json`;
 
@@ -140,6 +135,8 @@ export class WhatsappService {
       });
 
       this.gCloudProjectId = credentials.project_id;
+
+      console.log('initializeKeys ', this.gCloudProjectId);
 
       this.twilioClient = new Twilio(
         this.cryptService.decrypt(botCredentials.twilioSID, false),
@@ -158,7 +155,7 @@ export class WhatsappService {
     customerPhoneNo: string,
   ): Promise<any> {
     try {
-      console.log('BOT ID:', botId);
+      console.log('findOrCreateUser BOT ID:', botId);
 
       let user = await this.clientsRepository.findOne({
         phone: customerPhoneNo,
@@ -388,8 +385,6 @@ export class WhatsappService {
       });
     } catch (error) {
       throw error;
-    } finally {
-      await this.prisma.$disconnect();
     }
   }
 }
