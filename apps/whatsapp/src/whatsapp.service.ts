@@ -131,14 +131,11 @@ export class WhatsappService {
       this.dialogflowClient = new dialogflow.SessionsClient({
         credentials: {
           type: credentials.type,
-          client_email: credentials.client_email,
-          private_key: credentials.private_key,
-          private_key_id: credentials.private_key_id,
           project_id: credentials.project_id,
+          private_key_id: credentials.private_key_id,
+          private_key: credentials.private_key,
+          client_email: credentials.client_email,
           client_id: credentials.client_id,
-          client_secret: credentials.client_secret,
-          refresh_token: credentials.refresh_token,
-          quota_project_id: credentials.quota_project_id,
           universe_domain: credentials.universe_domain,
         },
       });
@@ -184,8 +181,7 @@ export class WhatsappService {
   }
 
   private turnBufferIntoString(bufferObj: any): string {
-    console.log('turnBufferIntoString ', bufferObj);
-    if (typeof bufferObj !== 'string') {
+    if (typeof bufferObj === 'object' && bufferObj.type === 'Buffer') {
       const buffer = Buffer.from(bufferObj.data);
 
       return [
@@ -197,7 +193,7 @@ export class WhatsappService {
       ].join('-');
     }
 
-    return bufferObj;
+    return bufferObj.toString();
   }
 
   private async findOrCreateConversation(
