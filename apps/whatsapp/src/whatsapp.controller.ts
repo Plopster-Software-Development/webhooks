@@ -17,7 +17,10 @@ export class WhatsappController {
       return await this.whatsappService.processMessage(webhookDto);
     } catch (error) {
       console.log(
-        `Error returned to Controller ${JSON.stringify(error) ?? error}`,
+        `Error returned to Controller`,
+        JSON.stringify(error),
+        error,
+        error.message,
       );
     }
   }
