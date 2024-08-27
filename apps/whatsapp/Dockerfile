@@ -1,4 +1,4 @@
-FROM node:alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /usr/src/app
 
@@ -13,7 +13,7 @@ COPY apps/whatsapp/prisma ./prisma
 RUN npx prisma generate --no-engine
 RUN yarn run build whatsapp
 
-FROM node:alpine AS production
+FROM node:20-alpine AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
