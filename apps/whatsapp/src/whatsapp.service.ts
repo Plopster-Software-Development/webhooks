@@ -105,6 +105,7 @@ export class WhatsappService {
         dialogFlowResponse.fulfillmentText,
       );
     } catch (error) {
+      console.log('processMessage ', error);
       throw error;
     }
   }
@@ -151,7 +152,7 @@ export class WhatsappService {
 
       return botCredentials.bot_id;
     } catch (error) {
-      console.log('initializeKeys', error);
+      console.log('initializeKeys ', error);
     }
   }
 
@@ -177,12 +178,13 @@ export class WhatsappService {
 
       return user._id;
     } catch (error) {
-      console.log('findOrCreateUser', error);
+      console.log('findOrCreateUser ', error);
       throw new InternalServerErrorException('Failed to find or create user');
     }
   }
 
   private turnBufferIntoString(bufferObj: any): string {
+    console.log('turnBufferIntoString ', bufferObj);
     if (typeof bufferObj !== 'string') {
       const buffer = Buffer.from(bufferObj.data);
 
