@@ -69,35 +69,33 @@ export class WhatsappService {
     try {
       const botId = await this.initializeKeys(webhookDto.To);
 
-      const buffer = await this.findOrCreateUser(
+      const userBuffer = await this.findOrCreateUser(
         botId,
         webhookDto.ProfileName,
         replaceParamsFromString(webhookDto.From, 'whatsapp', ''),
       );
 
-      const userId = this.turnBufferIntoID(buffer);
+      const userId = this.turnBufferIntoString(userBuffer);
 
-      const conversationId = await this.findOrCreateConversation(
+      const conversationBuffer = await this.findOrCreateConversation(
         botId,
         userId,
         webhookDto.Body,
       );
 
-      if (conversationId.found) {
-        await this.updateConversation(
-          conversationId._id,
-          webhookDto.Body,
-          'user',
-        );
+      const conversationId = this.turnBufferIntoString(conversationBuffer._id);
+
+      if (conversationBuffer.found) {
+        await this.updateConversation(conversationId, webhookDto.Body, 'user');
       }
 
       const dialogFlowResponse = await this.processDialogFlowMessage(
         webhookDto.Body,
-        conversationId._id,
+        conversationId,
       );
 
       await this.updateConversation(
-        conversationId._id,
+        conversationId,
         dialogFlowResponse.fulfillmentText,
         'bot',
       );
@@ -184,16 +182,20 @@ export class WhatsappService {
     }
   }
 
-  private turnBufferIntoID(bufferObj: any) {
-    const buffer = Buffer.from(bufferObj.data);
+  private turnBufferIntoString(bufferObj: any): string {
+    if (typeof bufferObj !== 'string') {
+      const buffer = Buffer.from(bufferObj.data);
 
-    return [
-      buffer.toString('hex', 0, 4),
-      buffer.toString('hex', 4, 6),
-      buffer.toString('hex', 6, 8),
-      buffer.toString('hex', 8, 10),
-      buffer.toString('hex', 10, 16),
-    ].join('-');
+      return [
+        buffer.toString('hex', 0, 4),
+        buffer.toString('hex', 4, 6),
+        buffer.toString('hex', 6, 8),
+        buffer.toString('hex', 8, 10),
+        buffer.toString('hex', 10, 16),
+      ].join('-');
+    }
+
+    return bufferObj;
   }
 
   private async findOrCreateConversation(
